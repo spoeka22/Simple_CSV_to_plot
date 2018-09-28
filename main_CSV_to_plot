@@ -25,12 +25,67 @@ import numpy as np
 #DATA IMPORT PARAMETERS
 folder_path = r'\\dtu-storage\annawi\Desktop\Projects\Propene oxidation\IR_experiments\Spectra'
 folders =[
-            '092418 - smoothPdfilm',
-            '092518',
+            # '092418 - smoothPdfilm',
+            # '092518',
             '092618 - rough Pd film'
           ]
 filenames =OrderedDict([
-            ('092418 - smoothPdfilm', ['092418_Pd_air_0001(1).csv'])
+            ('092418 - smoothPdfilm', ['092418_Pd_Phosbuff_450mV_prop_0001(6).csv',
+                                       '092418_Pd_Phosbuff_600mV_prop_0001(7).csv',
+                                       '092418_Pd_Phosbuff_600mV_prop_0002(8).csv',
+                                       '092418_Pd_Phosbuff_600mV_prop_0003(9).csv',
+                                       '092418_Pd_Phosbuff_600mV_prop_0004(10).csv',
+                                       '092418_Pd_Phosbuff_600mV_prop_0005(11).csv'
+                                       ]),
+            ('092518', [
+                #Background spectra
+                        # '092518_Pd_Phosbuff_Ar_400mV_0004(5).csv',
+                        # '092518_Pd_Phosbuff2_OCV_0002(39).csv',
+                #1000mV with time -> film dissolution
+                        # '092518_Pd_Phosbuff_prop_1000mV2_0001(12).csv',
+                        # '092518_Pd_Phosbuff_prop_1000mV2_0002(13).csv',
+                        # '092518_Pd_Phosbuff_prop_1000mV2_0003(14).csv',
+                        # '092518_Pd_Phosbuff_prop_1000mV2_0004(15).csv',
+                        # '092518_Pd_Phosbuff_prop_1000mV2_0005(16).csv'
+                #scanning up from 400mV to 900mV
+                        '092518_Pd_Phosbuff_Ar_400mV_0005(6).csv',
+                        '092518_Pd_Phosbuff_prop_400mV_0003(24).csv',
+                        '092518_Pd_Phosbuff_prop_500mV_0002(27).csv',
+                        '092518_Pd_Phosbuff_prop_600mV_0002(29).csv',
+                        '092518_Pd_Phosbuff_prop_700mV_0002(31).csv',
+                        '092518_Pd_Phosbuff_prop_800mV_0002(33).csv',
+                        '092518_Pd_Phosbuff_prop_900mV_0003(36).csv',
+                        '092518_Pd_Phosbuff_prop_postCV_0001(37).csv'
+                ]),
+            ('092618 - rough Pd film', [
+                #STEPPING UP THE POTENTIAL
+                # '092618_rPd_pbuff_prop_400mV_0001(1).csv',
+                # '092618_rPd_pbuff_prop_400mV_0002(2).csv',
+                # '092618_rPd_pbuff_prop_500mV_0003(3).csv',
+                # '092618_rPd_pbuff_prop_600mV_0003(4).csv',
+                # '092618_rPd_pbuff_prop_700mV_0003(5).csv',
+                # '092618_rPd_pbuff_prop_800mV_0003(6).csv',
+                # '092618_rPd_pbuff_prop_900mV_0003(7).csv',
+                # '092618_rPd_pbuff_prop_1000mV_0003(8).csv',
+                # '092618_rPd_pbuff_prop_1100mV_0002(9).csv',
+                #STRIPPING AFTER AR PURGE
+                # '092618_rPd_pbuff_Ar_400mV_0007(1).csv',
+                # '092618_rPd_pbuff_Ar_strip_700mV0001(2).csv',
+                # '092618_rPd_pbuff_Ar_strip_900mV0001(3).csv',
+                # '092618_rPd_pbuff_Ar_strip_1100mV0002(4).csv',
+                # '092618_rPd_pbuff_Ar_strip_1400mV0001(5).csv',
+                # '092618_rPd_pbuff_Ar_newbuff_0003(6).csv'
+                #NEWBUFFER REPETITION OF EXPERIMENTS
+                # '092618_rPd_newpbuff_prop_400mV_0001(1).csv',
+                '092618_rPd_newpbuff_prop_400mV_0002(2).csv',
+                '092618_rPd_newpbuff_prop_800mV_0002(3).csv',
+                '092618_rPd_newpbuff_prop_1400mV_0001(4).csv',
+                '092618_rPd_newpbuff_prop_1400mV_0001(5).csv',
+                '092618_rPd_newpbuff_prop_CV_0001(6).csv',
+                '092618_rPd_newpbuff_prop_CV_0002(7).csv',
+                '092618_rPd_newpbuff_prop_CV_0003(8).csv',
+                ]),
+
 ])
 
 
@@ -97,8 +152,8 @@ def make_plot(datalist, x_data_col = "Wavenumbers [1/cm]", y_data_col = "Absorba
     ax1 = fig.add_subplot(111)
 
     #settings for data lines
-    linestyle_list = ['-', '-', '--']
-    color_list = ['b', 'g', 'k', 'orange', 'c']
+    linestyle_list = ['-', '-', '-', '-', '-', '-', '-', '-', '-']
+    color_list = ['b', 'g', 'k', 'orange', 'magenta', 'teal', 'purple', 'gold', '#5a7d9a']
     marker_list = []
     label_choice = "time" #alternative: "name"
 
@@ -121,7 +176,7 @@ def make_plot(datalist, x_data_col = "Wavenumbers [1/cm]", y_data_col = "Absorba
     ax1.tick_params(axis="both", labelsize=14, pad=8, direction="in", which="both",
                     width=1.5)
     ax1.set_xlim(4050, 500)
-    ax1.set_ylim(-0.01, 0.001)
+    ax1.set_ylim(0.0, 0.06)
 
     ax1.legend(fontsize=8, loc=(0, 1.05), ncol=2)
 
@@ -138,7 +193,7 @@ def main():
     #read in the data
     datalist = import_csv(folder_path, filenames, folders)
     # print(datalist)
-    print(datalist[0]['data'])
+    # print(datalist[0]['data'])
 
     #make the plot
     make_plot(datalist)
