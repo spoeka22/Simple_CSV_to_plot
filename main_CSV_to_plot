@@ -7,6 +7,8 @@ Simple script to import CSV data as DataFrame according to absolute data path, p
 using matplotlib.
 
 Specifically written for importing FT-IR data exported as csv using software spectragryph.
+ Version 24.1.2019: updates so it's optimized to plot data from one single csv with several colums into an xyz shape,
+ rather than plotting single spectra
 
 """
 
@@ -18,73 +20,25 @@ from collections import OrderedDict
 import matplotlib
 matplotlib.use('qt4agg')
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import numpy as np
+import re
+from mpl_toolkits.mplot3d import Axes3D #THIS IS ACTUALLY USED!! DONT DELETE
+
 
 
 
 #DATA IMPORT PARAMETERS
-folder_path = r'\\dtu-storage\annawi\Desktop\Projects\Propene oxidation\IR_experiments\Spectra'
-folders =[
-            # '092418 - smoothPdfilm',
-            # '092518',
-            '092618 - rough Pd film'
+folder_path = r'C:\Users\annawi\Desktop\Projects\Propene oxidation\IR_experiments'
+folders =[  r'\20181121\112118\treated spectra'
+
           ]
 filenames =OrderedDict([
-            ('092418 - smoothPdfilm', ['092418_Pd_Phosbuff_450mV_prop_0001(6).csv',
-                                       '092418_Pd_Phosbuff_600mV_prop_0001(7).csv',
-                                       '092418_Pd_Phosbuff_600mV_prop_0002(8).csv',
-                                       '092418_Pd_Phosbuff_600mV_prop_0003(9).csv',
-                                       '092418_Pd_Phosbuff_600mV_prop_0004(10).csv',
-                                       '092418_Pd_Phosbuff_600mV_prop_0005(11).csv'
-                                       ]),
-            ('092518', [
-                #Background spectra
-                        # '092518_Pd_Phosbuff_Ar_400mV_0004(5).csv',
-                        # '092518_Pd_Phosbuff2_OCV_0002(39).csv',
-                #1000mV with time -> film dissolution
-                        # '092518_Pd_Phosbuff_prop_1000mV2_0001(12).csv',
-                        # '092518_Pd_Phosbuff_prop_1000mV2_0002(13).csv',
-                        # '092518_Pd_Phosbuff_prop_1000mV2_0003(14).csv',
-                        # '092518_Pd_Phosbuff_prop_1000mV2_0004(15).csv',
-                        # '092518_Pd_Phosbuff_prop_1000mV2_0005(16).csv'
-                #scanning up from 400mV to 900mV
-                        '092518_Pd_Phosbuff_Ar_400mV_0005(6).csv',
-                        '092518_Pd_Phosbuff_prop_400mV_0003(24).csv',
-                        '092518_Pd_Phosbuff_prop_500mV_0002(27).csv',
-                        '092518_Pd_Phosbuff_prop_600mV_0002(29).csv',
-                        '092518_Pd_Phosbuff_prop_700mV_0002(31).csv',
-                        '092518_Pd_Phosbuff_prop_800mV_0002(33).csv',
-                        '092518_Pd_Phosbuff_prop_900mV_0003(36).csv',
-                        '092518_Pd_Phosbuff_prop_postCV_0001(37).csv'
-                ]),
-            ('092618 - rough Pd film', [
-                #STEPPING UP THE POTENTIAL
-                # '092618_rPd_pbuff_prop_400mV_0001(1).csv',
-                # '092618_rPd_pbuff_prop_400mV_0002(2).csv',
-                # '092618_rPd_pbuff_prop_500mV_0003(3).csv',
-                # '092618_rPd_pbuff_prop_600mV_0003(4).csv',
-                # '092618_rPd_pbuff_prop_700mV_0003(5).csv',
-                # '092618_rPd_pbuff_prop_800mV_0003(6).csv',
-                # '092618_rPd_pbuff_prop_900mV_0003(7).csv',
-                # '092618_rPd_pbuff_prop_1000mV_0003(8).csv',
-                # '092618_rPd_pbuff_prop_1100mV_0002(9).csv',
-                #STRIPPING AFTER AR PURGE
-                # '092618_rPd_pbuff_Ar_400mV_0007(1).csv',
-                # '092618_rPd_pbuff_Ar_strip_700mV0001(2).csv',
-                # '092618_rPd_pbuff_Ar_strip_900mV0001(3).csv',
-                # '092618_rPd_pbuff_Ar_strip_1100mV0002(4).csv',
-                # '092618_rPd_pbuff_Ar_strip_1400mV0001(5).csv',
-                # '092618_rPd_pbuff_Ar_newbuff_0003(6).csv'
-                #NEWBUFFER REPETITION OF EXPERIMENTS
-                # '092618_rPd_newpbuff_prop_400mV_0001(1).csv',
-                '092618_rPd_newpbuff_prop_400mV_0002(2).csv',
-                '092618_rPd_newpbuff_prop_800mV_0002(3).csv',
-                '092618_rPd_newpbuff_prop_1400mV_0001(4).csv',
-                '092618_rPd_newpbuff_prop_1400mV_0001(5).csv',
-                '092618_rPd_newpbuff_prop_CV_0001(6).csv',
-                '092618_rPd_newpbuff_prop_CV_0002(7).csv',
-                '092618_rPd_newpbuff_prop_CV_0003(8).csv',
-                ]),
+          (r'\20181121\112118\treated spectra', ['20181122_firstCO_strip_simpleBL_corrH2OvAPCORR.csv',
+                                                 '20181122_propenepurge+secondCO_strip_firstspecsubtracted_simple_BLcorr_H2Ovapcorr.csv',
+                                                 '20181122_thridCO_purge_BLcorr_referencespecbeforepurgesubtracted_H2Ovapsubtr.csv'
+                                                  ])
+
 
 ])
 
@@ -112,10 +66,23 @@ def import_csv(folder_path, filenames, folders):
             if folder in folders:
                 datapath = folder_path + "/" + folder + "/" + filename
                 with open(datapath) as f:
-                    timestamp = f.readline()[5:-2]
-                    file_data = pd.read_table(f, delimiter=',')
+                    # timestamp = f.readline()[5:-2]
 
-                data.append({"filename": filename, "timestamp": timestamp, "data": file_data})
+
+                    timestamp=[]
+                    file_data = pd.read_table(f, delimiter=',')
+                    file_data.rename(columns={'Unnamed: 0':'Wavenumbers [1/cm]'}, inplace=True)
+                    # print(file_data)
+                    columns = list(file_data)
+                    for column in columns:
+                        time = re.search(r'\d{2}:\d{2}:\d{2}', column)
+                        if time:
+                            timestamp.append(time.group(0))
+                        else:
+                            timestamp.append("NaN")
+                    # print(timestamp)
+
+                    data.append({"filename": filename, "timestamp": timestamp, "data": file_data})
     
     return data
 
@@ -139,53 +106,98 @@ def makelabel(file, settings = "time"):
 
 
 #PLOTTING
-def make_plot(datalist, x_data_col = "Wavenumbers [1/cm]", y_data_col = "Absorbance"):
+def make_plot(datalist, x_data_col = "Wavenumbers [1/cm]", y_data_col="Absorbance a.u."):
     """
-
+    makes a new plot for each line of data in datalist
     :param datalist:
     :return:
     """
+    for dataline in datalist:
+        # print(dataline)
+        # prepare for figure with 2 x-axes
+        print('Preparing a figure with 2 x-axes for plotting.')
 
-    # prepare for figure with 2 x-axes
-    print('Preparing a figure with 2 x-axes for plotting.')
-    fig = plt.figure(figsize=(16,9))  # figsize=(3.999,2.1)
-    ax1 = fig.add_subplot(111)
+        fig = plt.figure(figsize=(16,9))  # figsize=(3.999,2.1)
+        ax1 = fig.add_subplot(111, projection='3d')
 
-    #settings for data lines
-    linestyle_list = ['-', '-', '-', '-', '-', '-', '-', '-', '-']
-    color_list = ['b', 'g', 'k', 'orange', 'magenta', 'teal', 'purple', 'gold', '#5a7d9a']
-    marker_list = []
-    label_choice = "time" #alternative: "name"
+        #find y colums to plot
+        columns = list(dataline['data'])[1:-1]
+        no_of_lines = len(columns)
+        # print(columns)
 
-    #plot data
-    for (each_file, color, linestyle, marker) in itertools.zip_longest(datalist, color_list, linestyle_list, marker_list):
-        try:
-            ax1.plot(each_file['data'][x_data_col].values.tolist()[:-3],
-                     each_file['data'][y_data_col].values.tolist()[:-3], color=color,
-                     linestyle=linestyle, marker=marker, label=makelabel(each_file, label_choice))
-        except TypeError:
-            if len(datalist) < len(color_list) or len(datalist) < len(linestyle_list) or len(datalist) < len(marker_list):
-                continue
+        # settings for data lines
+        linestyle_list = ['-', '-', '-', '-', '-', '-', '-', '-', '-']
+        cmap = cm.get_cmap('viridis')
+        color_list = [cmap(x/no_of_lines-0.05) for x in range(no_of_lines)]
+        # color_list = ['b', 'g', 'k', 'orange', 'magenta', 'teal', 'purple', 'gold', '#5a7d9a']
+        marker_list = []
+        label_choice = "time"  # alternative: "name"
+
+
+
+        # # plot data 2D
+        # for (column, color, linestyle, marker) in itertools.zip_longest(columns, color_list, linestyle_list,
+        #                                                                 marker_list):
+        #     try:
+        #         ax1.plot(dataline['data'][x_data_col].values.tolist()[1:-3],
+        #                  dataline['data'][column].values.tolist()[1:-3], color=color,
+        #                  linestyle=linestyle, marker=marker, )  # label=makelabel(dataline, label_choice))
+        #     except TypeError:
+        #         if len(datalist) < len(color_list) or len(datalist) < len(linestyle_list) or len(
+        #                 datalist) < len(marker_list):
+        #             continue
+        #         else:
+        #             print("Problem plotting datalist...")
+        #
+
+        # plot data 3D
+        for (column, color, linestyle, marker) in itertools.zip_longest(columns, color_list, linestyle_list,
+                                                                        marker_list):
+        #     print(column)
+            #find timestamp from column header - seems to be the most straightforward way to do that without adding extra loops
+            if column:
+                time = re.search(r'\d{2}:\d{2}:\d{2}', column).group(0)
+                time_seconds = float(time[0:2]) * 3600 + float(time[3:5]) * 60 + float(time[6:])
+                z_coordinate = time_seconds
             else:
-                print("Problem plotting datalist...")
+                continue
+
+            x_list = [float(x) for x in dataline['data'][x_data_col].values.tolist()[1:-3]]
+            y_list = [float(y) for y in dataline['data'][column].values.tolist()[1:-3]]
+            z_list = [z_coordinate for x in range(len(x_list))]
+
+            try:
+                ax1.plot(x_list, z_list, zs=y_list, color=color,
+                        linestyle=linestyle, marker=marker )  # label=makelabel(dataline, label_choice))
+
+            except TypeError:
+                if len(datalist) < len(color_list) or len(datalist) < len(linestyle_list) or len(datalist) < len(marker_list):
+                    continue
+                else:
+                    print("Problem plotting datalist...")
+
+        #3D persepective
+        ax1.view_init(elev=51, azim=-77)
 
 
-    # axis details
-    ax1.set_xlabel(x_data_col, size=16)
-    ax1.set_ylabel(y_data_col, size=16)
-    ax1.tick_params(axis="both", labelsize=14, pad=8, direction="in", which="both",
-                    width=1.5)
-    ax1.set_xlim(4050, 500)
-    ax1.set_ylim(0.0, 0.06)
+        # axis details
+        ax1.set_xlabel(x_data_col, size=16, labelpad=20)
+        ax1.set_ylabel("time / s", size=16, labelpad=20)
+        ax1.set_zlabel(y_data_col, size=16, labelpad=20)
+        ax1.tick_params(axis="both", labelsize=14, pad=10, direction="in", which="both",
+                        width=1.5)
+        ax1.set_xlim(4050, 500) #wavenumber
+        ax1.set_zlim(-0.005, 0.01) #absorbance
+        # ax1.set_ylim(0.0, 0.02) #time
 
-    ax1.legend(fontsize=8, loc=(0, 1.05), ncol=2)
+        ax1.legend(fontsize=8, loc=(0, 1.05), ncol=2)
 
-    # defines size of padding, important for legend on top, possibility to change space between subplots once implemented
-    lpad = 0.15
-    rpad = 0.15
-    tpad = 0.10
-    bpad = 0.15
-    fig.subplots_adjust(left=lpad, right=1 - rpad, top=1 - tpad, bottom=bpad)
+        # defines size of padding, important for legend on top, possibility to change space between subplots once implemented
+        lpad = 0.15
+        rpad = 0.15
+        tpad = 0.10
+        bpad = 0.15
+        fig.subplots_adjust(left=lpad, right=1 - rpad, top=1 - tpad, bottom=bpad)
 
     plt.show()
 
