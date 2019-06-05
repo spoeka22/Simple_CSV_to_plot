@@ -113,7 +113,7 @@ def import_csv(folder_path, filenames, folders):
                     # print(file_data)
 
                     data.append({"filename": filename, "timestamp": timestamp, "data": file_data})
-    
+
     return data
 
 
@@ -284,14 +284,14 @@ def save_the_plot(filename, logplot):
 
 
 
+if __name__ == '__main__':
+    #read in the data
+    # datalist = import_csv(folder_path, filenames, folders) #from csv format
+    datalist = import_avg(folder_path, filenames, folders) #from avg format
+    # print(datalist)
+    # print(datalist[0]['data'])
 
-#read in the data
-# datalist = import_csv(folder_path, filenames, folders) #from csv format
-datalist = import_avg(folder_path, filenames, folders) #from avg format
-# print(datalist)
-# print(datalist[0]['data'])
-
-#make the plot
-# make_plot(datalist)
+    #make the plot
+    # make_plot(datalist)
 
 
