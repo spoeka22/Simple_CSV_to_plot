@@ -23,7 +23,8 @@ import re
 
 
 #DATA IMPORT PARAMETERS
-folder_path = r'C:\Users\annawi\Desktop\Projects\Propene oxidation\IR_experiments\Spectra'
+folder_path = r'\\dtu-storage\annawi\Desktop\Projects\Propene oxidation\IR_experiments\Spectra'
+folders =[
             # '092418 - smoothPdfilm',
             # '092518',
             '092618 - rough Pd film'
