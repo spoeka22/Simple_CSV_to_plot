@@ -1,11 +1,7 @@
 '''
-Most recently edited 16I23. Imports the EC_MS package
-
-For a description of this package, see the included NOTES__EC_MS.text
-
-
-@author: Scott
+Makes it so that you can import the package's functions
 '''
+
 
 from Simple_CSV_to_plot.foldersearch_file_rename import *
 from Simple_CSV_to_plot.ISS_data_plotting import *
