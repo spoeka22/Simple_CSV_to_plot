@@ -70,3 +70,62 @@ def import_avg(folder_path, filenames, folders, energy_step=1):
                     data.append({"filename": filename, "timestamp": timestamp, "data": file_data})
 
     return data
+
+
+def load_ISS_data(ISS_file):
+    '''
+    Loads data as exported manual from Advantage by right-clicking a plot.
+    This stores the data in a dictionary with key-value pairs, the keys
+    being 'energy / eV' and the name of the samples, the values being numpy
+    arrays with one column of data each.
+
+    Input: name of your data file with path
+
+    Output: data as dictionary.
+
+    '''
+
+    with open(ISS_file, 'r') as f:
+        lines = f.readlines()
+
+
+    data_start = False
+    data = {'energy / eV':np.array([])}
+
+    for nl, line_full in enumerate(lines):
+        line = line_full.strip()
+        if 'Spectrum (L)' in line:
+            cs = line.split('\t')
+            #print(cs) # debugging
+            samples = []
+            for c in cs[1:]:
+                sample = c.split('\\')[0]
+                samples += [sample]
+                data[sample] = np.array([])
+            data['samples'] = samples
+
+        if line.strip() == 'eV':
+            data_start = True
+            print('Data to start at line ' + str(nl))
+            continue
+
+        if data_start:
+            ds = line.split('\t')
+
+            try:
+                e = float(ds[0])
+            except ValueError:
+                continue
+
+            data['energy / eV'] = np.append(data['energy / eV'], e)
+
+            #print(list(zip(samples, ds[2:]))) # debugging
+            for sample, d in zip(samples, ds[2:]):
+                try:
+                    e = float(d)
+                except ValueError:
+                    e = 0
+                data[sample] = np.append(data[sample], e)
+
+    return data
+
